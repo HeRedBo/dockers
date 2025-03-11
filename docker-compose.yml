@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql-${MYSQL_VERSION}
+    #使用该参数，container内的root拥有真正的root权限，否则，container内的root只是外部的一个普通用户权限
+    #设置为true，不然数据卷可能挂载不了，启动不起
+    privileged: true
+    restart: always
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASS: ${MYSQL_PASSWORD}
+      TZ: Asia/Shanghai
+    command:
+      --wait_timeout=31536000
+      --interactive_timeout=31536000
+      --max_connections=1000
+      --default-authentication-plugin=mysql_native_password
+    volumes:
+      #映射mysql的数据目录到宿主机，保存数据
+      - "./mysql/data:/var/lib/mysql"
+      #根据宿主机下的配置文件创建容器
+      - "./mysql/config/my.cnf:/etc/mysql/my.cnf"
+
+  redis:
+      image: redis:6.0.9-buster
+      container_name: redis
+      restart: always
+      ports:
+        - "${REDIS_PORT}:6379"
+      volumes:
+        - ./redis/redis.conf:/etc/redis/redis.conf:rw
+        - ./redis/redis-server.log:/var/log/redis/redis-server.log:rw
+        - ./redis/data:/data:rw
+      command:
+        # 执行的命令
+        redis-server /etc/redis/redis.conf --appendonly yes

@@ -1,0 +1,78 @@
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}  # 自动创建kibana_system用户密码
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g  # 调整 JVM 堆内存
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false  # 开发环境禁用HTTPS
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    command: >
+      bash -c '
+        # 检查环境变量是否设置
+        if [ -z "$${ELASTIC_PASSWORD}" ]; then
+          echo "ERROR: ELASTIC_PASSWORD must be set in .env file";
+          exit 1;
+        fi;
+        if [ -z "$${KIBANA_PASSWORD}" ]; then
+          echo "ERROR: KIBANA_PASSWORD must be set in .env file";
+          exit 1;
+        fi;
+        
+        # 启动 Elasticsearch 并等待服务就绪
+        /usr/local/bin/docker-entrypoint.sh eswrapper &
+
+        # 等待 Elasticsearch HTTP 端口可用
+        echo "Waiting for Elasticsearch to start...";
+        while ! curl -s http://localhost:9200; do sleep 30; done;
+
+        # 设置 kibana_system 密码
+        echo "Setting password for kibana_system...";
+        curl -s -X POST -u "elastic:$${ELASTIC_PASSWORD}" \
+          -H "Content-Type: application/json" \
+          "http://localhost:9200/_security/user/kibana_system/_password" \
+          -d "{\"password\":\"$${KIBANA_PASSWORD}\"}"
+        echo "All done!";
+        # 保持容器运行
+        wait
+      '  
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+    volumes:  
+      - ./kibanadata:/usr/share/kibana/data  
+    networks:
+      - elastic
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "5601:5601"
+
+volumes:
+  es_data:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge

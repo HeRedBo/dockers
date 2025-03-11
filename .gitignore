@@ -1,0 +1,7 @@
+.idea
+/redis
+/mysql/data
+/es-kibana/esdata
+/es-kibana/kibanadata
+.env
+

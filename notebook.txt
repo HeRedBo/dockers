@@ -1,0 +1,53 @@
+
+mysql -h 127.0.0.1 -P 3306 -u admin123 -p
+
+
+
+
+
+ ---
+
+使用env 配置文件要注意  kibana 的链接 当下没有使用 脚本 在 es  初始化 因此 需要针对 kibana 的相关账号 
+在 es 容器中进行初始化 已保障 kibana 能够 使用账号 连接到 es 服务
+
+
+启动Elasticsearch容器：
+
+docker-compose up -d elasticsearch
+
+
+设置kibana_system用户密码：
+进入Elasticsearch容器并执行以下命令：
+
+docker exec -it elasticsearch bash
+curl -u "elastic:elastic!" -X POST "http://localhost:9200/_security/user/kibana_system/_password" \
+  -H "Content-Type: application/json" \
+  -d '{"password": "kibana"}'
+exit
+
+
+
+启动Kibana服务：
+
+docker-compose up -d kibana
+
+检查Kibana日志以验证连接：
+
+docker-compose logs kibana
+
+
+
+
+
+
+
+# elastic账号的密码 (至少六个字符)
+ELASTIC_PASSWORD=elastic
+
+# kibana_system账号的密码 (至少六个字符)，该账号仅用于一些kibana的内部设置，不能用来查询es
+ELASTIC_USERNAME=kibana_system
+KIBANA_PASSWORD=kibana
+
+# es和kibana的版本
+STACK_VERSION=8.17.2
+

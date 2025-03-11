@@ -1,0 +1,11 @@
+.env
+certs
+esdata01
+esdata02
+esdata03
+plugins
+plugins01
+plugins02
+plugins03
+kibanaconfig
+kibanadata
