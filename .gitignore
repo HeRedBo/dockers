@@ -3,5 +3,7 @@
 /mysql/data
 /es-kibana/esdata
 /es-kibana/kibanadata
+/elasticsearch/esdata
+/kibana/data
 .env
 

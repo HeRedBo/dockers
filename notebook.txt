@@ -20,7 +20,7 @@ docker-compose up -d elasticsearch
 进入Elasticsearch容器并执行以下命令：
 
 docker exec -it elasticsearch bash
-curl -u "elastic:elastic!" -X POST "http://localhost:9200/_security/user/kibana_system/_password" \
+curl -u "elastic:elastic" -X POST "http://localhost:9200/_security/user/kibana_system/_password" \
   -H "Content-Type: application/json" \
   -d '{"password": "kibana"}'
 exit
@@ -51,3 +51,21 @@ KIBANA_PASSWORD=kibana
 # es和kibana的版本
 STACK_VERSION=8.17.2
 
+
+
+# 对所有索引生效
+curl -u elastic:elastic -XPUT "http://localhost:9200/_all/_settings" -H 'Content-Type: application/json' -d'
+{
+  "index.number_of_replicas": 0
+}'
+
+
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:$$ELASTIC_PASSWORD http://localhost:9200/_cluster/health | grep -qE 'yellow|green'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+
+curl -u "kibana_system:kibana" http://elasticsearch:9200      

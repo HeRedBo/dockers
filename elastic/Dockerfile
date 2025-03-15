@@ -4,6 +4,7 @@ ARG STACK_VERSION=8.2.2
 
 FROM docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
 
+
 # 重新声明 ARG，使其在当前阶段生效
 ARG STACK_VERSION
 # 安装 IK 分词插件

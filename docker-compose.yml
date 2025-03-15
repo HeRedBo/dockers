@@ -23,7 +23,6 @@ services:
       - "./mysql/data:/var/lib/mysql"
       #根据宿主机下的配置文件创建容器
       - "./mysql/config/my.cnf:/etc/mysql/my.cnf"
-
   redis:
       image: redis:6.0.9-buster
       container_name: redis
@@ -37,3 +36,83 @@ services:
       command:
         # 执行的命令
         redis-server /etc/redis/redis.conf --appendonly yes
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      args:
+        STACK_VERSION: ${STACK_VERSION}
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+      - xpack.security.enabled=true  # 可选，关闭安全认证（测试用）
+      - xpack.security.http.ssl.enabled=false
+      - cluster.routing.allocation.disk.threshold_enabled=false  # 关闭磁盘水位检查（测试环境用）
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+    volumes:
+      - ./elasticsearch/esdata:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic
+    ports:
+      - "${ES_PORT}:9200"
+      - "${ES_TRANSPORT_PORT}:9300"  
+    command: >
+      bash -c '
+        # 检查环境变量是否设置
+        if [ -z "$${ELASTIC_PASSWORD}" ]; then
+          echo "ERROR: ELASTIC_PASSWORD must be set in .env file";
+          exit 1;
+        fi;
+        if [ -z "$${KIBANA_PASSWORD}" ]; then
+          echo "ERROR: KIBANA_PASSWORD must be set in .env file";
+          exit 1;
+        fi;
+        
+        # 启动 Elasticsearch 并等待服务就绪
+        /usr/local/bin/docker-entrypoint.sh eswrapper &
+
+        # 等待 Elasticsearch HTTP 端口可用
+        echo "Waiting for Elasticsearch to start...";
+        while ! curl -s http://localhost:9200; do sleep 30; done;
+
+        # 设置 kibana_system 密码
+        echo "Setting password for kibana_system...";
+        curl -s -X POST -u "elastic:$${ELASTIC_PASSWORD}" \
+          -H "Content-Type: application/json" \
+          "http://localhost:9200/_security/user/kibana_system/_password" \
+          -d "{\"password\":\"$${KIBANA_PASSWORD}\"}"
+        echo "All done!";
+        # 保持容器运行
+        wait
+      '      
+    healthcheck:
+      # test: ["CMD-SHELL", "curl -f -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE 'yellow|green'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+    volumes:  
+      - ./kibana/data:/usr/share/kibana/data  
+    networks:
+      - elastic
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "${KIBANA_PORT}:5601"
+
+networks:
+  elastic:
+    driver: bridge
