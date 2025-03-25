@@ -1,0 +1,49 @@
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.9.2  # Bitnami ZooKeeper镜像
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes  # 允许匿名访问（生产环境需配置认证）
+      - ZOO_SERVER_ID=1
+      - ZOO_SERVERS=0.0.0.0:2888:3888
+      - ZOO_CFG_EXTRA="autopurge.snapRetainCount=3 autopurge.purgeInterval=24"
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper  # Bitnami镜像的默认数据目录
+      - ./zookeeper/custom-zoo.cfg:/bitnami/zookeeper/conf/zoo.cfg:ro  # 挂载自定义配置
+
+  kafka:
+    image: bitnami/kafka:3.7.0  # Bitnami Kafka镜像
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_ENABLE_KRAFT=no  # 显式禁用 KRaft 模式
+      # ZooKeeper 模式核心配置
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181  # 必须正确指向 ZooKeeper
+      # 清除所有 KRaft 相关配置
+      - KAFKA_CFG_PROCESS_ROLES=  # 必须显式清空 KRaft 角色
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=  # 必须显式清空控制器监听器
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=
+      # 修复监听器安全协议映射错误
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      # 其他配置
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+      # 隐藏配置 (防止脚本报错)
+      - KAFKA_CFG_NODE_ID=  # 必须清空
+    volumes:
+      - kafka_data:/bitnami/kafka  # Bitnami镜像的默认数据目录
+      - ./kafka/custom-server.properties:/bitnami/kafka/config/server.properties:ro  # 挂载自定义配置
+    depends_on:
+      - zookeeper
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local

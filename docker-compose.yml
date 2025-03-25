@@ -117,17 +117,18 @@ services:
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
       # 新版Confluent镜像需要以下格式
-      KAFKA_ZOOKEEPER_CLIENT_PORT: 2181  
-      ZOO_4LW_COMMANDS_WHITELIST: "*"  # 允许所有四字命令
+      ZOOKEEPER_SECURE_CLIENT_PORT: 2281  # SSL端口
+      ZOOKEEPER_TICK_TIME: 2000
+    
+      #ZOO_4LW_COMMANDS_WHITELIST: "*"  # 允许所有四字命令
     ports:
       - "${ZOOKEEPER_PORT}:2181"
     volumes:
       - ./zookeeper/data:/var/lib/zookeeper/data
       - ./zookeeper/log:/var/lib/zookeeper/log
     networks:
-      - kafka-network  
+      - kafka-network   
   kafka:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}
     container_name: kafka
@@ -146,8 +147,7 @@ services:
     volumes:
       - ./kafka/data:/var/lib/kafka/data
     networks:
-      - kafka-network  
-
+      - kafka-network
 networks:
   elastic:
     driver: bridge
