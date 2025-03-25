@@ -1,9 +1,13 @@
 .idea
+.vscode
 /redis
 /mysql/data
 /es-kibana/esdata
 /es-kibana/kibanadata
 /elasticsearch/esdata
 /kibana/data
+/kafka/data
+/zookeeper/data
+/zookeeper/log
 .env
 
