@@ -1,5 +1,4 @@
 .idea
-.vscode
 /redis
 /mysql/data
 /es-kibana/esdata
@@ -8,6 +7,6 @@
 /kibana/data
 /kafka/data
 /zookeeper/data
-/zookeeper/log
 .env
-
+kafka_data/
+.vscode/
