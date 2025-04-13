@@ -10,3 +10,4 @@
 .env
 kafka_data/
 .vscode/
+mongo

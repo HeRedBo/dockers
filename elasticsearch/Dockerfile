@@ -11,8 +11,8 @@ RUN elasticsearch-plugin install --batch \
     https://release.infinilabs.com/analysis-ik/stable/elasticsearch-analysis-ik-${STACK_VERSION}.zip
 
 # 安装拼音插件（可选）
-# RUN elasticsearch-plugin install --batch \
-#    https://release.infinilabs.com/analysis-pinyin/stable/elasticsearch-analysis-pinyin-${STACK_VERSION}.zip
+RUN elasticsearch-plugin install --batch \
+    https://release.infinilabs.com/analysis-pinyin/stable/elasticsearch-analysis-pinyin-${STACK_VERSION}.zip
 
 # 暴露 Elasticsearch 的端口
 EXPOSE 9200 9300
