@@ -11,3 +11,4 @@
 kafka_data/
 .vscode/
 mongo
+etcd-demo/etcd
