@@ -180,9 +180,25 @@ services:
       - --listen-client-urls=http://0.0.0.0:2379
       - --advertise-client-urls=http://0.0.0.0:2379
       - --log-level=info
-      
+    networks:
+      - etcd-network
+  etcdkeeper:
+    image: evildecay/etcdkeeper:latest
+    container_name: etcdkeeper
+    restart: always
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    networks:
+      - etcd-network  # 加入同一个网络
+    depends_on:
+      - etcd  # 等etcd启动后再启动
+
+
 networks:
   elastic:
     driver: bridge
   kafka-network:
+    driver: bridge
+  etcd-network:
     driver: bridge
