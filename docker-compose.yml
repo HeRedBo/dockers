@@ -165,7 +165,22 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092 
-
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.11
+    container_name: etcd
+    restart: always
+    ports:
+      - "2379:2379"
+    volumes:
+      - ./etcd/data:/etcd-data
+    # 纯单机模式，无集群参数，最简单稳定
+    command:
+      - /usr/local/bin/etcd
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://0.0.0.0:2379
+      - --log-level=info
+      
 networks:
   elastic:
     driver: bridge
