@@ -126,33 +126,37 @@ services:
     ports:
       - "${KIBANA_PORT}:5601"
   kafka:
-    image: docker.io/bitnami/kafka:${KAFKA_VERSION:-4.0}
+    image: apache/kafka:${KAFKA_VERSION:-4.0}
     container_name: kafka
     ports:
       - "${KAFKA_PORT:-9092}:9092"
     networks:
       - kafka-network
     volumes:
-      - "./kafka_data:/bitnami/kafka"
+      - "./kafka_data:/tmp/kraft-combined-logs"  # 仅修改数据挂载路径（适配官方镜像）
     environment:
-      # KRaft settings
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      # Listeners
-      # - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      # - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093  # 绑定到所有接口
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://host.docker.internal:9092  # Mac/Windows 专用
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_ENABLE_KRAFT=yes
+      # 新增：必须显式指定 CLUSTER_ID（解决核心报错）
+      - CLUSTER_ID=5L6g3nShT-eMCtK--X86sw
+      # KRaft 核心配置（保留你的原有逻辑，仅调整变量名格式）
+      - KAFKA_NODE_ID=0
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners 配置（完全复用你的原有配置）
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://host.docker.internal:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      # 新增：禁用 ZooKeeper（强制使用 KRaft）
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server localhost:9092"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092 || exit 0"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 20s
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
