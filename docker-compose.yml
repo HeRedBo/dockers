@@ -163,7 +163,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "8080:8080"
+      - "8082:8080"
     networks:
       - kafka-network
     environment:
