@@ -229,6 +229,15 @@ services:
       - "9093:9092/tcp"
     networks:
       apisix-network:
+  sail:
+    image: ccr.ccs.tencentyun.com/hyy-yu/sail:latest
+    container_name: sail
+    ports:
+      - "8108:8108"
+    volumes:
+      - "./sail/compose-cfg.toml:/app/cfg.toml"
+    restart: always
+    platform: linux/arm64
 
 networks:
   elastic:
