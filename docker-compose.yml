@@ -198,7 +198,37 @@ services:
       - etcd-network  # 加入同一个网络
     depends_on:
       - etcd  # 等etcd启动后再启动
+  apisix-dashboard:
+    image: apache/apisix-dashboard:3.0.1-alpine
+    container_name: apisix-dashboard
+    restart: always
+    depends_on:
+      - etcd
+    volumes:
+      - ./apisix-dashboard/conf.yaml:/usr/local/apisix-dashboard/conf/conf.yaml
+    ports:
+      - "9000:9000"
+    networks:
+      apisix-network:
 
+  apisix:
+    image: apache/apisix:${APISIX_IMAGE_TAG:-3.2.0-debian}
+    container_name: apisix
+    restart: always
+    depends_on:
+      - etcd
+      - apisix-dashboard
+    volumes:
+      - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml
+      - ./apisix/logs:/usr/local/apisix/logs
+    ports:
+      - "9180:9180/tcp"
+      - "9080:9080/tcp"
+      - "9091:9091/tcp"
+      - "9443:9443/tcp"
+      - "9093:9092/tcp"
+    networks:
+      apisix-network:
 
 networks:
   elastic:
@@ -206,4 +236,6 @@ networks:
   kafka-network:
     driver: bridge
   etcd-network:
+    driver: bridge
+  apisix-network:
     driver: bridge
