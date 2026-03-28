@@ -16,3 +16,7 @@ etcd/
 apisix-eted/apisix/logs
 apisix/logs
 apisix-eted
+!dockprom/.gitkeep
+dockprom
+!dockprom/grafana/.gitkeep
+dockprom/grafana/provisioning
