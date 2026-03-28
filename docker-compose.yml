@@ -131,6 +131,26 @@ services:
         condition: service_healthy
     ports:
       - "${KIBANA_PORT}:5601"
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    container_name: logstash
+    environment:
+      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml  # 挂载 logstash.yml 以配置 ES 连接参数
+      - ./logstash/pipeline:/usr/share/logstash/pipeline       # 挂载自定义配置文件目录 (建议你在项目根目录创建 ./logstash/pipeline 目录)
+    ports:
+      - "5044:5044" # Beats 输入端口
+      - "5000:5000/tcp" # TCP 输入
+      - "5000:5000/udp" # UDP 输入
+      - "9600:9600"  # Logstash API/Monitoring
+    networks:
+      - elastic
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: always
   kafka:
     image: apache/kafka:${KAFKA_VERSION:-4.0}
     container_name: kafka
@@ -255,8 +275,21 @@ services:
     platform: linux/arm64
     networks:
       - dockers-network
-      
-      
+  jeager:
+    image: jaegertracing/all-in-one:latest
+    container_name: jeager
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "9411:9411"
+    restart: always
+    networks:
+      - dockers-network
+
 networks:
   elastic:
     driver: bridge
