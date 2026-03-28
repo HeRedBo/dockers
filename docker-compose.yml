@@ -23,6 +23,12 @@ services:
       - "./mysql/data:/var/lib/mysql"
       #根据宿主机下的配置文件创建容器
       - "./mysql/config/my.cnf:/etc/mysql/my.cnf"
+    healthcheck:
+      test: [ "CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
+      timeout: 2s
+      retries: 2
+    networks:
+      - dockers-network
   redis:
       image: redis:6.0.9-buster
       container_name: redis
@@ -174,19 +180,24 @@ services:
     image: quay.io/coreos/etcd:v3.5.11
     container_name: etcd
     restart: always
+    # 暴露端口供调试
     ports:
       - "2379:2379"
     volumes:
       - ./etcd/data:/etcd-data
-    # 纯单机模式，无集群参数，最简单稳定
-    command:
-      - /usr/local/bin/etcd
-      - --data-dir=/etcd-data
-      - --listen-client-urls=http://0.0.0.0:2379
-      - --advertise-client-urls=http://0.0.0.0:2379
-      - --log-level=info
+    environment:
+      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_ENABLE_V2=true
+    # 简单的健康检查
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
-      - etcd-network
+      - dockers-network
   etcdkeeper:
     image: evildecay/etcdkeeper:latest
     container_name: etcdkeeper
@@ -195,40 +206,39 @@ services:
       - "8080:8080"
       - "8081:8081"
     networks:
-      - etcd-network  # 加入同一个网络
+      - dockers-network  # 加入同一个网络
     depends_on:
       - etcd  # 等etcd启动后再启动
-  apisix-dashboard:
-    image: apache/apisix-dashboard:3.0.1-alpine
-    container_name: apisix-dashboard
-    restart: always
-    depends_on:
-      - etcd
-    volumes:
-      - ./apisix-dashboard/conf.yaml:/usr/local/apisix-dashboard/conf/conf.yaml
-    ports:
-      - "9000:9000"
-    networks:
-      apisix-network:
-
   apisix:
     image: apache/apisix:${APISIX_IMAGE_TAG:-3.2.0-debian}
     container_name: apisix
     restart: always
     depends_on:
-      - etcd
-      - apisix-dashboard
+      etcd:
+        condition: service_healthy
     volumes:
       - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml
       - ./apisix/logs:/usr/local/apisix/logs
     ports:
-      - "9180:9180/tcp"
-      - "9080:9080/tcp"
-      - "9091:9091/tcp"
-      - "9443:9443/tcp"
-      - "9093:9092/tcp"
+      - "9180:9180"
+      - "9080:9080"
+      - "9091:9091"
+      - "9443:9443"
     networks:
-      apisix-network:
+      - dockers-network   
+  apisix-dashboard:
+    image: apache/apisix-dashboard:3.0.1-alpine
+    container_name: apisix-dashboard
+    restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+    volumes:
+      - ./apisix-dashboard/conf.yaml:/usr/local/apisix-dashboard/conf/conf.yaml
+    ports:
+      - "9000:9000"
+    networks:
+      - dockers-network
   sail:
     image: ccr.ccs.tencentyun.com/hyy-yu/sail:latest
     container_name: sail
@@ -237,14 +247,20 @@ services:
     volumes:
       - "./sail/compose-cfg.toml:/app/cfg.toml"
     restart: always
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql: # 这里写上面定义的服务名
+        condition: service_healthy
     platform: linux/arm64
-
+    networks:
+      - dockers-network
+      
+      
 networks:
   elastic:
     driver: bridge
   kafka-network:
     driver: bridge
-  etcd-network:
-    driver: bridge
-  apisix-network:
+  dockers-network:
     driver: bridge

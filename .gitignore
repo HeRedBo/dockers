@@ -13,3 +13,6 @@ kafka_data/
 mongo
 etcd-demo/etcd
 etcd/
+apisix-eted/apisix/logs
+apisix/logs
+apisix-eted
