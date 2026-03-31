@@ -1,5 +1,6 @@
 .idea
-/redis
+!redis/.gitkeep
+/redis/data
 /mysql/data
 /es-kibana/esdata
 /es-kibana/kibanadata

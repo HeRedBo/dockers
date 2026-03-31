@@ -233,6 +233,8 @@ services:
     image: apache/apisix:${APISIX_IMAGE_TAG:-3.2.0-debian}
     container_name: apisix
     restart: always
+    # ↓↓↓ 新增这一行，强制用 root 运行，解决权限问题 ↓↓↓
+    user: root
     depends_on:
       etcd:
         condition: service_healthy
@@ -275,9 +277,9 @@ services:
     platform: linux/arm64
     networks:
       - dockers-network
-  jeager:
+  jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: jeager
+    container_name: jaeger
     ports:
       - "5775:5775/udp"
       - "6831:6831/udp"
@@ -286,7 +288,18 @@ services:
       - "16686:16686"
       - "14268:14268"
       - "9411:9411"
+       # ✅ OTEL 标准端口（go-zero 必须使用）
+      - "4317:4317"    # OTLP gRPC (核心)
+      - "4318:4318"    # OTLP HTTP (可选)
     restart: always
+    environment:
+      # 可选：设置时区或日志级别
+      - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3 
     networks:
       - dockers-network
 
