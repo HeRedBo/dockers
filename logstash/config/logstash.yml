@@ -389,14 +389,14 @@
 http.host: "0.0.0.0"
 
 # 监控数据写入 ES（可选，用于在 Kibana 看 Logstash 状态）
-xpack.monitoring.enabled: true
+xpack.monitoring.enabled: false
 xpack.monitoring.elasticsearch.hosts: ["http://elasticsearch:9200"]
 xpack.monitoring.elasticsearch.username: elastic
 xpack.monitoring.elasticsearch.password: ${ELASTIC_PASSWORD}
 
 # 由于我们使用的是自签名证书，必须跳过 SSL 验证，否则连接会被拒绝
-xpack.monitoring.elasticsearch.ssl.certificate_authority: /usr/share/logstash/config/certs/ca.crt
-xpack.monitoring.elasticsearch.ssl.verification_mode: none 
+# xpack.monitoring.elasticsearch.ssl.certificate_authority: /usr/share/logstash/config/certs/ca.crt
+# xpack.monitoring.elasticsearch.ssl.verification_mode: none 
 
 
 # 关闭自动 reload（生产建议关闭）

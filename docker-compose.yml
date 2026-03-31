@@ -79,7 +79,7 @@ services:
         soft: -1
         hard: -1
     networks:
-      - elastic
+      - dockers-network
     ports:
       - "${ES_PORT}:9200"
       - "${ES_TRANSPORT_PORT}:9300"  
@@ -128,7 +128,7 @@ services:
     volumes:  
       - ./kibana/data:/usr/share/kibana/data  
     networks:
-      - elastic
+      - dockers-network
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -141,6 +141,7 @@ services:
       - LS_JAVA_OPTS=-Xms512m -Xmx512m
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
+      - ./mysql/log/slow.log:/var/logs/mysql-slow.log
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml  # 挂载 logstash.yml 以配置 ES 连接参数
       - ./logstash/pipeline:/usr/share/logstash/pipeline       # 挂载自定义配置文件目录 (建议你在项目根目录创建 ./logstash/pipeline 目录)
     ports:
@@ -149,11 +150,12 @@ services:
       - "5000:5000/udp" # UDP 输入
       - "9600:9600"  # Logstash API/Monitoring
     networks:
-      - elastic
+      - dockers-network
     depends_on:
       elasticsearch:
         condition: service_healthy
     restart: always
+    user: root
   kafka:
     image: apache/kafka:${KAFKA_VERSION:-4.0}
     container_name: kafka
