@@ -243,6 +243,8 @@ services:
     depends_on:
       etcd:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml
       - ./apisix/logs:/usr/local/apisix/logs
