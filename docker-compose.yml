@@ -21,8 +21,11 @@ services:
     volumes:
       #映射mysql的数据目录到宿主机，保存数据
       - "./mysql/data:/var/lib/mysql"
+      - ./mysql/log:/var/log/mysql
       #根据宿主机下的配置文件创建容器
-      - "./mysql/config/my.cnf:/etc/mysql/my.cnf"
+      # - "./mysql/config/my.cnf:/etc/mysql/my.cnf"
+      # mysql 8.0 配置路径调整
+      - "./mysql/config/my.cnf:/etc/mysql/conf.d/mysqld.cnf"
     healthcheck:
       test: [ "CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
       timeout: 2s

@@ -21,3 +21,4 @@ apisix-eted
 dockprom
 !dockprom/grafana/.gitkeep
 dockprom/grafana/provisioning
+mysql/log/
