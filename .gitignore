@@ -22,3 +22,4 @@ dockprom
 !dockprom/grafana/.gitkeep
 dockprom/grafana/provisioning
 mysql/log/
+prometheus/data
