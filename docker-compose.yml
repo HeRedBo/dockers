@@ -356,6 +356,42 @@ services:
       - "9090:9090"
     networks:
       - dockers-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin} # 管理员账号
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123} # 改成你自己的密码
+      - GF_USERS_ALLOW_SIGN_UP=false # 关闭注册，安全
+      - GF_LOG_LEVEL=warn # 日志精简
+      - TZ=Asia/Shanghai # 时区统一
+    volumes:
+      - ./grafana/config/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./grafana/data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    user: "472" # grafana 官方普通用户，非root
+    privileged: false # 关闭高危特权
+    security_opt:
+      - no-new-privileges:true # 安全加固
+    networks:
+      - dockers-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
   elastic:

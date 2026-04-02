@@ -1,0 +1,18 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus 数据源
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy 
+    url: http://prometheus:9090  # 关键：docker 网络内直接用服务名访问
+    isDefault: true             # 设置为默认数据源
+    editable: true              # 允许页面修改
+    orgId: 1
+    version: 1
+
+    # 推荐配置（可选，优化查询）
+    jsonData:
+      timeInterval: "5s"
+      queryTimeout: "60s"
