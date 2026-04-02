@@ -177,6 +177,8 @@ services:
     networks:
       - dockers-network
     restart: unless-stopped
+    command: >
+      --strict.perms=false
   kafka:
     image: apache/kafka:${KAFKA_VERSION:-4.0}
     container_name: kafka
