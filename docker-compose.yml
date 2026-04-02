@@ -125,6 +125,7 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - I18N_LOCALE=zh-CN  # 这一行就是汉化
     volumes:  
       - ./kibana/data:/usr/share/kibana/data  
     networks:
