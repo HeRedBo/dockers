@@ -1,0 +1,52 @@
+###########################################################
+# Filebeat 终极基础配置模板
+# 功能：控制台实时输出 + 同步 Elasticsearch
+# 适用：Docker / Windows / Mac / Linux
+###########################################################
+
+# ========================== 【一、日志输入配置】 ==========================
+filebeat.inputs:
+  # 1. APISIX 日志
+  - type: filestream
+    enabled: true
+    paths:
+      - /logs/apisix/access.log
+    # fields:
+    #   service: apisix
+    # fields_under_root: true
+
+  # 2. MySQL 日志
+  # - type: filestream
+  #   enabled: true
+  #   paths:
+  #     - /logs/mysql/*.log
+  #   fields:
+  #     service: mysql
+  #   fields_under_root: true
+
+  # 3. 以后新增服务 → 复制上面一段即可！
+
+# ========================== 【二、通用配置】 ==========================
+# 关闭自动管理索引（开发环境更简单）
+setup.ilm.enabled: false
+setup.template.enabled: true
+setup.template.name: "app-logs"
+setup.template.pattern: "app-logs-*"
+
+# ========================== 【三、双输出配置】 ==========================
+
+# 1. 输出到控制台（开发实时查看用）
+# 启动命令：docker logs -f filebeat
+output.console:
+  enabled: true
+  pretty: true  # 格式化输出，好看
+
+# 2. 输出到 Elasticsearch（存储+查询用）
+# output.elasticsearch:
+#   enabled: true
+#   hosts: ["http://elasticsearch:9200"]
+#   index: "app-logs-%{+yyyy.MM.dd}"  # 按天创建索引
+
+# ========================== 【四、日志级别】 ==========================
+logging.level: info
+logging.metrics.enabled: false

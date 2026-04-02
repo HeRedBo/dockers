@@ -156,6 +156,27 @@ services:
         condition: service_healthy
     restart: always
     user: root
+    # 3. Filebeat 收集所有 Docker 容器日志
+  filebeat:
+    image: elastic/filebeat:${STACK_VERSION}
+    container_name: filebeat
+    user: root
+    volumes:
+      # 读取所有容器日志
+      # - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # # 获取容器名称等元信息
+      # - /var/run/docker.sock:/var/run/docker.sock
+      # 挂载配置
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+       # 只挂载 APISIX 日志目录
+      - ./apisix/logs:/logs/apisix:ro
+        # 只挂载 MySQL 日志目录
+      - ./mysql/log:/logs/mysql:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - dockers-network
+    restart: unless-stopped
   kafka:
     image: apache/kafka:${KAFKA_VERSION:-4.0}
     container_name: kafka
