@@ -9,11 +9,29 @@ filebeat.inputs:
   # 1. APISIX 日志
   - type: filestream
     enabled: true
+    # 🔥 关键：支持 APISIX 按天切割的日志文件
     paths:
+      # - /logs/apisix/access-*.log
       - /logs/apisix/access.log
-    # fields:
-    #   service: apisix
-    # fields_under_root: true
+    fields:
+      service: apisix  # 标记服务名
+      index_prefix: apisix     # 👈 关键：自定义索引前缀
+    fields_under_root: true
+
+  # 2. MySQL 日志 demo 
+  # - type: filestream
+  #   enabled: true
+  #   paths:
+  #     - /logs/mysql/*.log
+  #   fields:
+  #     service: mysql
+  #     index_prefix: mysql      # 👈 关键：自定义索引前缀
+  #   fields_under_root: true
+
+    # 自动识别新文件、自动处理切割
+    #clean_inactive: 1h
+    #ignore_older: 24h
+    #close_inactive: 5m
 
   # 2. MySQL 日志
   # - type: filestream
@@ -29,23 +47,31 @@ filebeat.inputs:
 # ========================== 【二、通用配置】 ==========================
 # 关闭自动管理索引（开发环境更简单）
 setup.ilm.enabled: false
-setup.template.enabled: true
-setup.template.name: "app-logs"
-setup.template.pattern: "app-logs-*"
+setup.template.enabled: false
+setup.management.enabled: false
 
 # ========================== 【三、双输出配置】 ==========================
 
 # 1. 输出到控制台（开发实时查看用）
 # 启动命令：docker logs -f filebeat
-output.console:
-  enabled: true
-  pretty: true  # 格式化输出，好看
+# output.console:
+#   enabled: true
+#   pretty: true  # 格式化输出，好看
+
 
 # 2. 输出到 Elasticsearch（存储+查询用）
-# output.elasticsearch:
-#   enabled: true
-#   hosts: ["http://elasticsearch:9200"]
-#   index: "app-logs-%{+yyyy.MM.dd}"  # 按天创建索引
+
+# ✅ 核心：自动根据 index_prefix 分到不同索引
+
+output.elasticsearch:
+  enabled: true
+  hosts: ["http://elasticsearch:9200"]
+  index: "apisix_logs"  # 按天创建索引
+  # index: "%{index_prefix}_logs-%{+yyyy.MM.dd}"  # 👈 自动区分！
+   # ✅ 这里加 ES 账号密码
+  username: "elastic"        # 默认账号
+  password: "${ELASTIC_PASSWORD}"
+
 
 # ========================== 【四、日志级别】 ==========================
 logging.level: info

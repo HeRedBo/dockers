@@ -172,6 +172,8 @@ services:
       - ./apisix/logs:/logs/apisix:ro
         # 只挂载 MySQL 日志目录
       - ./mysql/log:/logs/mysql:ro
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}  # ✅ 这里传进去  
     depends_on:
       - elasticsearch
     networks:
