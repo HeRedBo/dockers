@@ -143,6 +143,7 @@ services:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - ./mysql/log/slow.log:/var/logs/mysql-slow.log
+      - ./apisix/logs:/var/logs/apisix:ro
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml  # 挂载 logstash.yml 以配置 ES 连接参数
       - ./logstash/pipeline:/usr/share/logstash/pipeline       # 挂载自定义配置文件目录 (建议你在项目根目录创建 ./logstash/pipeline 目录)
     ports:
