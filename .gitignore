@@ -18,9 +18,13 @@ apisix-eted/apisix/logs
 apisix/logs/**/*
 !apisix/logs/.gitkeep
 apisix-eted
-!dockprom/.gitkeep
-dockprom
-dockprom/grafana/provisioning
+
+dockprom/grafana/provisioning/dashboards/**/*
+dockprom/grafana/provisioning/datasources/**/*
+!dockprom/grafana/provisioning/dashboards/datasource.yaml
+!dockprom/grafana/provisioning/datasources/.gitkeep
+
+
 !dockprom/grafana/.gitkeep
 mysql/log/
 prometheus/data/**/*
