@@ -16,6 +16,7 @@ filebeat.inputs:
     fields:
       service: apisix  # 标记服务名
       log_type: access
+      index_prefix: apisix_access     # 👈 关键：自定义索引前缀
     fields_under_root: true
 
   # ======================
@@ -30,6 +31,7 @@ filebeat.inputs:
     fields:
       service: apisix 
       log_type: error
+      index_prefix: apisix_error
     fields_under_root: true
 
 
@@ -60,9 +62,7 @@ filebeat.inputs:
   #     service: mysql
   #   fields_under_root: true
 
-
-
-
+  # 3. 以后新增服务 → 复制上面一段即可！
 
 # ========================== 【二、通用配置】 ==========================
 # 关闭自动管理索引（开发环境更简单）
@@ -86,24 +86,10 @@ setup.management.enabled: false
 output.elasticsearch:
   enabled: true
   hosts: ["http://elasticsearch:9200"]
-  indices:
-    # - index: "apisix_access_logs-%{+yyyy.MM.dd}" # 按天切割日志
-    - index: "apisix_access_logs"
-      when:
-        and:
-          - equals:
-              service: "apisix"
-          - equals:
-              log_type: "access"
-    - index: "apisix_error_logs"
-      when:
-        and:
-          - equals:
-              service: "apisix"
-          - equals:
-              log_type: "error"
-  index: "filebeat_unknown_logs"
-  # index: "%{[@metadata.index]}"    # 👈 这是唯一支持的动态索引
+  index: "apisix_logs"  # 按天创建索引
+  # index: "%{[fields.index_prefix]}_logs"  # 自动区分！
+  # index: "%{[fields.index_prefix]}_logs-%{+yyyy.MM.dd}"
+  # index: "%{[fields.index_prefix]}_logs-%{+yyyy.MM.dd}"  # 👈 自动区分！
    # ✅ 这里加 ES 账号密码
   username: "elastic"        # 默认账号
   password: "${ELASTIC_PASSWORD}"

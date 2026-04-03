@@ -162,6 +162,9 @@ services:
     image: elastic/filebeat:${STACK_VERSION}
     container_name: filebeat
     user: root
+    privileged: true
+    entrypoint: sh -c "filebeat -e --strict.perms=false"
+    # 👇👇👇 核心：直接把配置写进容器，彻底解决权限问题！
     volumes:
       # 读取所有容器日志
       # - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -173,6 +176,7 @@ services:
       - ./apisix/logs:/logs/apisix:ro
         # 只挂载 MySQL 日志目录
       - ./mysql/log:/logs/mysql:ro
+    
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}  # ✅ 这里传进去  
     depends_on:
@@ -180,8 +184,7 @@ services:
     networks:
       - dockers-network
     restart: unless-stopped
-    command: >
-      --strict.perms=false
+
   kafka:
     image: apache/kafka:${KAFKA_VERSION:-4.0}
     container_name: kafka
