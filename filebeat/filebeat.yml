@@ -43,25 +43,8 @@ filebeat.inputs:
   #     - /logs/mysql/*.log
   #   fields:
   #     service: mysql
-  #     index_prefix: mysql      # 👈 关键：自定义索引前缀
+  #     log_type: sql
   #   fields_under_root: true
-
-    # 自动识别新文件、自动处理切割
-    #clean_inactive: 1h
-    #ignore_older: 24h
-    #close_inactive: 5m
-
-  # 2. MySQL 日志
-  # - type: filestream
-  #   enabled: true
-  #   paths:
-  #     - /logs/mysql/*.log
-  #   fields:
-  #     service: mysql
-  #   fields_under_root: true
-
-
-
 
 
 # ========================== 【二、通用配置】 ==========================
@@ -78,11 +61,8 @@ setup.management.enabled: false
 #   enabled: true
 #   pretty: true  # 格式化输出，好看
 
-
 # 2. 输出到 Elasticsearch（存储+查询用）
-
 # ✅ 核心：自动根据 index_prefix 分到不同索引
-
 output.elasticsearch:
   enabled: true
   hosts: ["http://elasticsearch:9200"]
@@ -102,12 +82,10 @@ output.elasticsearch:
               service: "apisix"
           - equals:
               log_type: "error"
-  index: "filebeat_unknown_logs"
-  # index: "%{[@metadata.index]}"    # 👈 这是唯一支持的动态索引
+  index: "filebeat_unknown_logs"  # 兜底索引 避免出现 null 索引问题
    # ✅ 这里加 ES 账号密码
   username: "elastic"        # 默认账号
   password: "${ELASTIC_PASSWORD}"
-
 
 # ========================== 【四、日志级别】 ==========================
 logging.level: info
