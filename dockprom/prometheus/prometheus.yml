@@ -29,6 +29,18 @@ scrape_configs:
     static_configs:
       - targets: ['host.docker.internal:8082'] # 本地Go程序
 
+  # user-api
+  - job_name: 'user-api'
+    static_configs:
+      - targets: ['host.docker.internal:9102']
+    metrics_path: /metrics
+
+  # user-rpc
+  - job_name: 'user-rpc'
+    static_configs:
+      - targets: ['host.docker.internal:9103']
+    metrics_path: /metrics
+
 #  - job_name: 'nginx'
 #    scrape_interval: 10s
 #    static_configs:
